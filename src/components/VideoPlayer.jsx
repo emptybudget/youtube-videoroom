@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import CommentPopup from './CommentPopup'
 import { fetchComments } from '../utils/youtube'
 
@@ -15,33 +15,17 @@ function loadYTScript() {
 
 export default function VideoPlayer({ video, apiKey, onEnded }) {
   const playerRef = useRef(null)
-  const ytReadyRef = useRef(!!window.YT?.Player)
+  const onEndedRef = useRef(onEnded)
   const currentVideoIdRef = useRef(null)
   const timerRef = useRef(null)
   const speedRef = useRef(1)
-  const onEndedRef = useRef(onEnded)
-  const wrapperRef = useRef(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [comments, setComments] = useState([])
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [speed, setSpeed] = useState(1)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
-  useEffect(() => { onEndedRef.current = onEnded }, [onEnded])
-
-  useEffect(() => {
-    function onFsChange() { setIsFullscreen(!!document.fullscreenElement) }
-    document.addEventListener('fullscreenchange', onFsChange)
-    return () => document.removeEventListener('fullscreenchange', onFsChange)
-  }, [])
-
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      wrapperRef.current?.requestFullscreen()
-    } else {
-      document.exitFullscreen()
-    }
-  }
+  onEndedRef.current = onEnded
 
   function startTimer() {
     clearInterval(timerRef.current)
@@ -57,7 +41,7 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
     clearInterval(timerRef.current)
   }
 
-  const createPlayer = useCallback((videoId) => {
+  function createPlayer(videoId) {
     if (playerRef.current) {
       playerRef.current.loadVideoById(videoId)
       return
@@ -75,7 +59,7 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
         },
       },
     })
-  }, [])
+  }
 
   useEffect(() => {
     loadYTScript()
@@ -83,12 +67,11 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
       const prev = window.onYouTubeIframeAPIReady || (() => {})
       window.onYouTubeIframeAPIReady = () => {
         prev()
-        ytReadyRef.current = true
         if (currentVideoIdRef.current) createPlayer(currentVideoIdRef.current)
       }
     }
     return () => stopTimer()
-  }, [createPlayer])
+  }, [])
 
   useEffect(() => {
     if (!video) return
@@ -101,7 +84,7 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
         .catch(() => setComments([]))
         .finally(() => setCommentsLoading(false))
     }
-  }, [video, apiKey, createPlayer])
+  }, [video, apiKey])
 
   function handleSeek(seconds) {
     playerRef.current?.seekTo(seconds, true)
@@ -126,12 +109,16 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
 
   return (
     <div className="player-area">
-      <div className="player-wrapper" ref={wrapperRef}>
+      <div className={`player-wrapper${isFullscreen ? ' player-fullscreen' : ''}`}>
         <div id={PLAYER_DIV_ID} />
         <CommentPopup comments={comments} currentTime={currentTime} onSeek={handleSeek} />
         {commentsLoading && <div className="comments-loading">댓글 로딩 중…</div>}
-        <button className="fullscreen-btn" onClick={toggleFullscreen} title={isFullscreen ? '전체화면 종료' : '전체화면'}>
-          {isFullscreen ? '⊠' : '⛶'}
+        <button
+          className="btn-fullscreen"
+          onClick={() => setIsFullscreen(f => !f)}
+          title={isFullscreen ? '전체화면 종료' : '전체화면'}
+        >
+          {isFullscreen ? '✕' : '⛶'}
         </button>
       </div>
       <div className="player-info">
