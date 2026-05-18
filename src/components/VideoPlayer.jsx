@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import CommentPopup from './CommentPopup'
 import { fetchComments } from '../utils/youtube'
 
@@ -14,12 +14,14 @@ function loadYTScript() {
 
 export default function VideoPlayer({ video, apiKey, onEnded }) {
   const playerRef = useRef(null)
-  const ytReadyRef = useRef(!!window.YT?.Player)
+  const onEndedRef = useRef(onEnded)
   const currentVideoIdRef = useRef(null)
   const timerRef = useRef(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [comments, setComments] = useState([])
   const [commentsLoading, setCommentsLoading] = useState(false)
+
+  onEndedRef.current = onEnded
 
   function startTimer() {
     clearInterval(timerRef.current)
@@ -34,7 +36,7 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
     clearInterval(timerRef.current)
   }
 
-  const createPlayer = useCallback((videoId) => {
+  function createPlayer(videoId) {
     if (playerRef.current) {
       playerRef.current.loadVideoById(videoId)
       return
@@ -48,35 +50,28 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
         onStateChange(e) {
           if (e.data === window.YT.PlayerState.PLAYING) startTimer()
           else stopTimer()
-          if (e.data === window.YT.PlayerState.ENDED) onEnded?.()
+          if (e.data === window.YT.PlayerState.ENDED) onEndedRef.current?.()
         },
       },
     })
-  }, [onEnded])
+  }
 
   useEffect(() => {
     loadYTScript()
-
     if (!window.YT?.Player) {
       const prev = window.onYouTubeIframeAPIReady || (() => {})
       window.onYouTubeIframeAPIReady = () => {
         prev()
-        ytReadyRef.current = true
         if (currentVideoIdRef.current) createPlayer(currentVideoIdRef.current)
       }
     }
-
     return () => stopTimer()
-  }, [createPlayer])
+  }, [])
 
   useEffect(() => {
     if (!video) return
     currentVideoIdRef.current = video.id
-
-    if (window.YT?.Player) {
-      createPlayer(video.id)
-    }
-
+    if (window.YT?.Player) createPlayer(video.id)
     if (apiKey) {
       setCommentsLoading(true)
       fetchComments(apiKey, video.id)
@@ -84,7 +79,7 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
         .catch(() => setComments([]))
         .finally(() => setCommentsLoading(false))
     }
-  }, [video, apiKey, createPlayer])
+  }, [video, apiKey])
 
   function handleSeek(seconds) {
     playerRef.current?.seekTo(seconds, true)
