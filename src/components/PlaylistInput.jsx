@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { extractPlaylistId, fetchPlaylistItems } from '../utils/youtube'
-import { saveApiKey } from '../utils/storage'
+import { saveApiKey, getSavedPlaylists, savePlaylist, removePlaylist } from '../utils/storage'
 
 export default function PlaylistInput({ apiKey, setApiKey, onLoad, loading, setLoading }) {
   const [url, setUrl] = useState('')
   const [error, setError] = useState('')
   const [showKey, setShowKey] = useState(false)
+  const [saved, setSaved] = useState(getSavedPlaylists)
 
-  async function handleLoad() {
+  async function handleLoad(targetUrl) {
+    const u = targetUrl ?? url
     setError('')
-    const listId = extractPlaylistId(url.trim())
+    const listId = extractPlaylistId(u.trim())
     if (!listId) return setError('재생목록 URL에서 list= 파라미터를 찾을 수 없습니다.')
     if (!apiKey.trim()) return setError('YouTube Data API 키를 입력해 주세요.')
 
@@ -17,6 +19,7 @@ export default function PlaylistInput({ apiKey, setApiKey, onLoad, loading, setL
     try {
       const items = await fetchPlaylistItems(apiKey.trim(), listId)
       onLoad(items)
+      if (!targetUrl) setUrl(u)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -27,6 +30,19 @@ export default function PlaylistInput({ apiKey, setApiKey, onLoad, loading, setL
   function handleApiKeyChange(v) {
     setApiKey(v)
     saveApiKey(v)
+  }
+
+  function handleSave() {
+    if (!url.trim()) return
+    const name = window.prompt('저장할 이름을 입력해 주세요:')
+    if (!name?.trim()) return
+    savePlaylist(name.trim(), url.trim())
+    setSaved(getSavedPlaylists())
+  }
+
+  function handleRemove(id) {
+    removePlaylist(id)
+    setSaved(getSavedPlaylists())
   }
 
   return (
@@ -52,13 +68,26 @@ export default function PlaylistInput({ apiKey, setApiKey, onLoad, loading, setL
           onKeyDown={e => e.key === 'Enter' && handleLoad()}
           className="input url-input"
         />
-        <button className="btn-primary" onClick={handleLoad} disabled={loading}>
+        <button className="btn-icon" onClick={handleSave} title="즐겨찾기 저장">★</button>
+        <button className="btn-primary" onClick={() => handleLoad()} disabled={loading}>
           {loading ? '로딩 중…' : '불러오기'}
         </button>
       </div>
       {error && <p className="error-msg">{error}</p>}
+      {saved.length > 0 && (
+        <ul className="saved-list">
+          {saved.map(p => (
+            <li key={p.id} className="saved-item">
+              <button className="saved-name" onClick={() => { setUrl(p.url); handleLoad(p.url) }}>
+                ★ {p.name}
+              </button>
+              <button className="saved-remove" onClick={() => handleRemove(p.id)} title="삭제">×</button>
+            </li>
+          ))}
+        </ul>
+      )}
       <p className="hint">
-        API 키: <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noreferrer">Google Cloud Console</a>에서 YouTube Data API v3 활성화 후 발급
+        API 키: <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noreferrer">Google Cloud Console</a>에서 발급
       </p>
     </div>
   )

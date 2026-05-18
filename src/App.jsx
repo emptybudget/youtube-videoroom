@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import PlaylistInput from './components/PlaylistInput'
 import VideoList from './components/VideoList'
 import VideoPlayer from './components/VideoPlayer'
@@ -11,6 +11,7 @@ export default function App() {
   const [currentVideo, setCurrentVideo] = useState(null)
   const [watched, setWatched] = useState(getWatched)
   const [loading, setLoading] = useState(false)
+  const [mobileTab, setMobileTab] = useState('player')
 
   function handleLoad(items) {
     setVideos(items)
@@ -19,6 +20,7 @@ export default function App() {
 
   function handleSelect(video) {
     setCurrentVideo(video)
+    setMobileTab('player')
   }
 
   const handleEnded = useCallback(() => {
@@ -37,7 +39,7 @@ export default function App() {
 
   return (
     <div className="layout">
-      <aside className="sidebar">
+      <aside className={`sidebar ${mobileTab === 'list' ? 'mobile-show' : 'mobile-hide'}`}>
         <header className="sidebar-header">
           <span className="logo">📺 비디오방</span>
         </header>
@@ -56,13 +58,27 @@ export default function App() {
           onClearWatched={handleClearWatched}
         />
       </aside>
-      <main className="main">
+      <main className={`main ${mobileTab === 'player' ? 'mobile-show' : 'mobile-hide'}`}>
         <VideoPlayer
           video={currentVideo}
           apiKey={apiKey}
           onEnded={handleEnded}
         />
       </main>
+      <nav className="mobile-tab-bar">
+        <button
+          className={`mobile-tab ${mobileTab === 'player' ? 'active' : ''}`}
+          onClick={() => setMobileTab('player')}
+        >
+          ▶ 플레이어
+        </button>
+        <button
+          className={`mobile-tab ${mobileTab === 'list' ? 'active' : ''}`}
+          onClick={() => setMobileTab('list')}
+        >
+          ☰ 목록 {videos.length > 0 && `(${videos.length})`}
+        </button>
+      </nav>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 const WATCHED_KEY = 'yt_watched'
 const API_KEY = 'yt_api_key'
+const PLAYLISTS_KEY = 'yt_playlists'
 
 export function getWatched() {
   try {
@@ -25,4 +26,23 @@ export function getSavedApiKey() {
 
 export function saveApiKey(key) {
   localStorage.setItem(API_KEY, key)
+}
+
+export function getSavedPlaylists() {
+  try {
+    return JSON.parse(localStorage.getItem(PLAYLISTS_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
+
+export function savePlaylist(name, url) {
+  const list = getSavedPlaylists()
+  list.unshift({ id: Date.now().toString(), name, url })
+  localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(list))
+}
+
+export function removePlaylist(id) {
+  const list = getSavedPlaylists().filter(p => p.id !== id)
+  localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(list))
 }
