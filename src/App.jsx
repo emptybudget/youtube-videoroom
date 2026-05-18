@@ -2,12 +2,12 @@ import { useState, useCallback, useEffect } from 'react'
 import PlaylistInput from './components/PlaylistInput'
 import VideoList from './components/VideoList'
 import VideoPlayer from './components/VideoPlayer'
-import { getSavedApiKey, getWatched, markWatched } from './utils/storage'
+import { getSavedApiKey, getWatched, markWatched, getLastVideos, saveLastVideos } from './utils/storage'
 import './App.css'
 
 export default function App() {
   const [apiKey, setApiKey] = useState(getSavedApiKey)
-  const [videos, setVideos] = useState([])
+  const [videos, setVideos] = useState(getLastVideos)
   const [currentVideo, setCurrentVideo] = useState(null)
   const [watched, setWatched] = useState(getWatched)
   const [loading, setLoading] = useState(false)
@@ -18,6 +18,7 @@ export default function App() {
 
   function handleLoad(items) {
     setVideos(items)
+    saveLastVideos(items)
     setCurrentVideo(null)
   }
 
