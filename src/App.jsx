@@ -2,7 +2,8 @@ import { useState, useCallback, useMemo } from 'react'
 import PlaylistInput from './components/PlaylistInput'
 import VideoList from './components/VideoList'
 import VideoPlayer from './components/VideoPlayer'
-import { getSavedApiKey, getWatched, markWatched, getSavedPlaylists, addPlaylist, removePlaylist } from './utils/storage'
+import HelpModal from './components/HelpModal'
+import { getSavedApiKey, getWatched, markWatched, getSavedPlaylists, addPlaylist, removePlaylist, isHelpDismissed } from './utils/storage'
 import './App.css'
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
   const [mobileTab, setMobileTab] = useState('player')
   const [expanded, setExpanded] = useState(null)
   const [reversed, setReversed] = useState(false)
+  const [showHelp, setShowHelp] = useState(!isHelpDismissed())
 
   const activeVideos = useMemo(() => {
     const pl = playlists.find(p => p.id === activePlaylistId)
@@ -56,6 +58,7 @@ export default function App() {
       <aside className={`sidebar ${mobileTab === 'list' ? 'mobile-show' : 'mobile-hide'}`}>
         <header className="sidebar-header">
           <span className="logo">📺 비디오방</span>
+          <button className="btn-help" onClick={() => setShowHelp(true)} title="도움말">?</button>
         </header>
         <PlaylistInput
           apiKey={apiKey}
@@ -98,6 +101,7 @@ export default function App() {
           ☰ 목록 {playlists.length > 0 && `(${playlists.length})`}
         </button>
       </nav>
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
     </div>
   )
 }

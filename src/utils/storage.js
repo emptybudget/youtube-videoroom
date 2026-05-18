@@ -48,3 +48,13 @@ export function removePlaylist(id) {
   const list = getSavedPlaylists().filter(p => p.id !== id)
   localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(list))
 }
+
+export function isHelpDismissed() {
+  const ts = localStorage.getItem('yt_help_dismissed')
+  if (!ts) return false
+  return Date.now() - parseInt(ts) < 24 * 60 * 60 * 1000
+}
+
+export function dismissHelp() {
+  localStorage.setItem('yt_help_dismissed', Date.now().toString())
+}

@@ -20,12 +20,28 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
   const timerRef = useRef(null)
   const speedRef = useRef(1)
   const onEndedRef = useRef(onEnded)
+  const wrapperRef = useRef(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [comments, setComments] = useState([])
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [speed, setSpeed] = useState(1)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => { onEndedRef.current = onEnded }, [onEnded])
+
+  useEffect(() => {
+    function onFsChange() { setIsFullscreen(!!document.fullscreenElement) }
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => document.removeEventListener('fullscreenchange', onFsChange)
+  }, [])
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      wrapperRef.current?.requestFullscreen()
+    } else {
+      document.exitFullscreen()
+    }
+  }
 
   function startTimer() {
     clearInterval(timerRef.current)
@@ -50,7 +66,7 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
       videoId,
       width: '100%',
       height: '100%',
-      playerVars: { autoplay: 1, modestbranding: 1, rel: 0, iv_load_policy: 3 },
+      playerVars: { autoplay: 1, modestbranding: 1, rel: 0, iv_load_policy: 3, fs: 0 },
       events: {
         onStateChange(e) {
           if (e.data === window.YT.PlayerState.PLAYING) startTimer()
@@ -110,10 +126,13 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
 
   return (
     <div className="player-area">
-      <div className="player-wrapper">
+      <div className="player-wrapper" ref={wrapperRef}>
         <div id={PLAYER_DIV_ID} />
         <CommentPopup comments={comments} currentTime={currentTime} onSeek={handleSeek} />
         {commentsLoading && <div className="comments-loading">댓글 로딩 중…</div>}
+        <button className="fullscreen-btn" onClick={toggleFullscreen} title={isFullscreen ? '전체화면 종료' : '전체화면'}>
+          {isFullscreen ? '⊠' : '⛶'}
+        </button>
       </div>
       <div className="player-info">
         <div className="player-info-top">
