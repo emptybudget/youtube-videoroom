@@ -1,45 +1,55 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import PlaylistInput from './components/PlaylistInput'
 import VideoList from './components/VideoList'
 import VideoPlayer from './components/VideoPlayer'
-import { getSavedApiKey, getWatched, markWatched, getLastVideos, saveLastVideos } from './utils/storage'
+import { getSavedApiKey, getWatched, markWatched, getSavedPlaylists, addPlaylist, removePlaylist } from './utils/storage'
 import './App.css'
 
 export default function App() {
   const [apiKey, setApiKey] = useState(getSavedApiKey)
-  const [videos, setVideos] = useState(getLastVideos)
+  const [playlists, setPlaylists] = useState(getSavedPlaylists)
   const [currentVideo, setCurrentVideo] = useState(null)
+  const [activePlaylistId, setActivePlaylistId] = useState(null)
   const [watched, setWatched] = useState(getWatched)
   const [loading, setLoading] = useState(false)
   const [mobileTab, setMobileTab] = useState('player')
+  const [expanded, setExpanded] = useState(null)
   const [reversed, setReversed] = useState(false)
 
-  const orderedVideos = reversed ? [...videos].reverse() : videos
+  const activeVideos = useMemo(() => {
+    const pl = playlists.find(p => p.id === activePlaylistId)
+    const vids = pl?.videos ?? []
+    return reversed ? [...vids].reverse() : vids
+  }, [playlists, activePlaylistId, reversed])
 
-  function handleLoad(items) {
-    setVideos(items)
-    saveLastVideos(items)
-    setCurrentVideo(null)
+  function handleAdd(name, videos) {
+    addPlaylist(name, videos)
+    const updated = getSavedPlaylists()
+    setPlaylists(updated)
+    setExpanded(updated[0].id)
   }
 
-  function handleSelect(video) {
+  function handleSelect(video, playlistId) {
     setCurrentVideo(video)
+    setActivePlaylistId(playlistId)
     setMobileTab('player')
+  }
+
+  function handleRemove(id) {
+    removePlaylist(id)
+    setPlaylists(getSavedPlaylists())
+    if (activePlaylistId === id) setCurrentVideo(null)
+    if (expanded === id) setExpanded(null)
   }
 
   const handleEnded = useCallback(() => {
     if (!currentVideo) return
     markWatched(currentVideo.id)
     setWatched(getWatched())
-
-    const idx = orderedVideos.findIndex(v => v.id === currentVideo.id)
-    const next = orderedVideos[idx + 1]
+    const idx = activeVideos.findIndex(v => v.id === currentVideo.id)
+    const next = activeVideos[idx + 1]
     if (next) setCurrentVideo(next)
-  }, [currentVideo, orderedVideos])
-
-  function handleClearWatched() {
-    setWatched(new Set())
-  }
+  }, [currentVideo, activeVideos])
 
   return (
     <div className="layout">
@@ -50,16 +60,19 @@ export default function App() {
         <PlaylistInput
           apiKey={apiKey}
           setApiKey={setApiKey}
-          onLoad={handleLoad}
+          onAdd={handleAdd}
           loading={loading}
           setLoading={setLoading}
         />
         <VideoList
-          videos={orderedVideos}
+          playlists={playlists}
           currentId={currentVideo?.id}
           watched={watched}
           onSelect={handleSelect}
-          onClearWatched={handleClearWatched}
+          onRemove={handleRemove}
+          onClearWatched={() => setWatched(getWatched())}
+          expanded={expanded}
+          onExpand={setExpanded}
           reversed={reversed}
           onToggleReverse={() => setReversed(r => !r)}
         />
@@ -82,7 +95,7 @@ export default function App() {
           className={`mobile-tab ${mobileTab === 'list' ? 'active' : ''}`}
           onClick={() => setMobileTab('list')}
         >
-          ☰ 목록 {videos.length > 0 && `(${videos.length})`}
+          ☰ 목록 {playlists.length > 0 && `(${playlists.length})`}
         </button>
       </nav>
     </div>

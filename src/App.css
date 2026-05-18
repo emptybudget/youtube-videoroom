@@ -458,6 +458,62 @@
   word-break: break-word;
 }
 
+/* ── Playlist Accordion ── */
+.playlist-group {
+  border-bottom: 1px solid #1e1e1e;
+}
+
+.playlist-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.playlist-row:hover {
+  background: #222;
+}
+
+.playlist-arrow {
+  font-size: 11px;
+  color: #555;
+  flex-shrink: 0;
+  width: 10px;
+}
+
+.playlist-name {
+  flex: 1;
+  font-size: 13px;
+  color: #ccc;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playlist-meta {
+  font-size: 11px;
+  color: #555;
+  flex-shrink: 0;
+}
+
+.playlist-videos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #111;
+}
+
+.playlist-videos .list-item {
+  padding-left: 22px;
+}
+
+.playlist-videos .list-item.current {
+  padding-left: 19px;
+}
+
 /* ── Speed Bar ── */
 .player-info-top {
   display: flex;
