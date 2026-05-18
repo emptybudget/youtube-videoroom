@@ -12,6 +12,9 @@ export default function App() {
   const [watched, setWatched] = useState(getWatched)
   const [loading, setLoading] = useState(false)
   const [mobileTab, setMobileTab] = useState('player')
+  const [reversed, setReversed] = useState(false)
+
+  const orderedVideos = reversed ? [...videos].reverse() : videos
 
   function handleLoad(items) {
     setVideos(items)
@@ -28,10 +31,10 @@ export default function App() {
     markWatched(currentVideo.id)
     setWatched(getWatched())
 
-    const idx = videos.findIndex(v => v.id === currentVideo.id)
-    const next = videos[idx + 1]
+    const idx = orderedVideos.findIndex(v => v.id === currentVideo.id)
+    const next = orderedVideos[idx + 1]
     if (next) setCurrentVideo(next)
-  }, [currentVideo, videos])
+  }, [currentVideo, orderedVideos])
 
   function handleClearWatched() {
     setWatched(new Set())
@@ -51,11 +54,13 @@ export default function App() {
           setLoading={setLoading}
         />
         <VideoList
-          videos={videos}
+          videos={orderedVideos}
           currentId={currentVideo?.id}
           watched={watched}
           onSelect={handleSelect}
           onClearWatched={handleClearWatched}
+          reversed={reversed}
+          onToggleReverse={() => setReversed(r => !r)}
         />
       </aside>
       <main className={`main ${mobileTab === 'player' ? 'mobile-show' : 'mobile-hide'}`}>

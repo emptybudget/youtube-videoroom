@@ -19,10 +19,13 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
   const currentVideoIdRef = useRef(null)
   const timerRef = useRef(null)
   const speedRef = useRef(1)
+  const onEndedRef = useRef(onEnded)
   const [currentTime, setCurrentTime] = useState(0)
   const [comments, setComments] = useState([])
   const [commentsLoading, setCommentsLoading] = useState(false)
   const [speed, setSpeed] = useState(1)
+
+  useEffect(() => { onEndedRef.current = onEnded }, [onEnded])
 
   function startTimer() {
     clearInterval(timerRef.current)
@@ -52,11 +55,11 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
         onStateChange(e) {
           if (e.data === window.YT.PlayerState.PLAYING) startTimer()
           else stopTimer()
-          if (e.data === window.YT.PlayerState.ENDED) onEnded?.()
+          if (e.data === window.YT.PlayerState.ENDED) onEndedRef.current?.()
         },
       },
     })
-  }, [onEnded])
+  }, [])
 
   useEffect(() => {
     loadYTScript()

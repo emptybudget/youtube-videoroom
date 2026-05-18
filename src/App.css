@@ -173,6 +173,16 @@
   color: #666;
 }
 
+.list-header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-ghost.active {
+  color: #ff4444;
+  border-color: #ff4444;
+}
+
 .list-items {
   list-style: none;
   margin: 0;
