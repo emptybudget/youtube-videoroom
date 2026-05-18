@@ -20,6 +20,7 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
   const [currentTime, setCurrentTime] = useState(0)
   const [comments, setComments] = useState([])
   const [commentsLoading, setCommentsLoading] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   onEndedRef.current = onEnded
 
@@ -45,7 +46,7 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
       videoId,
       width: '100%',
       height: '100%',
-      playerVars: { autoplay: 1, modestbranding: 1, rel: 0, iv_load_policy: 3 },
+      playerVars: { autoplay: 1, modestbranding: 1, rel: 0, iv_load_policy: 3, fs: 0 },
       events: {
         onStateChange(e) {
           if (e.data === window.YT.PlayerState.PLAYING) startTimer()
@@ -98,10 +99,17 @@ export default function VideoPlayer({ video, apiKey, onEnded }) {
 
   return (
     <div className="player-area">
-      <div className="player-wrapper">
+      <div className={`player-wrapper${isFullscreen ? ' player-fullscreen' : ''}`}>
         <div id={PLAYER_DIV_ID} />
         <CommentPopup comments={comments} currentTime={currentTime} onSeek={handleSeek} />
         {commentsLoading && <div className="comments-loading">댓글 로딩 중…</div>}
+        <button
+          className="btn-fullscreen"
+          onClick={() => setIsFullscreen(f => !f)}
+          title={isFullscreen ? '전체화면 종료' : '전체화면'}
+        >
+          {isFullscreen ? '✕' : '⛶'}
+        </button>
       </div>
       <div className="player-info">
         <h2 className="player-title">{video.title}</h2>
