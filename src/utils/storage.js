@@ -21,8 +21,10 @@ export function clearWatched() {
 }
 
 export function getSavedApiKey() {
-  return localStorage.getItem(API_KEY) || ''
+  return localStorage.getItem(API_KEY) || import.meta.env.VITE_API_KEY || ''
 }
+
+export const hasEnvApiKey = !!import.meta.env.VITE_API_KEY
 
 export function saveApiKey(key) {
   localStorage.setItem(API_KEY, key)

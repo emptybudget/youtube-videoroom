@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { extractPlaylistId, fetchPlaylistItems } from '../utils/youtube'
-import { saveApiKey, getSavedPlaylists, savePlaylist, removePlaylist } from '../utils/storage'
+import { saveApiKey, getSavedPlaylists, savePlaylist, removePlaylist, hasEnvApiKey } from '../utils/storage'
 
 export default function PlaylistInput({ apiKey, setApiKey, onLoad, loading, setLoading }) {
   const [url, setUrl] = useState('')
@@ -47,18 +47,20 @@ export default function PlaylistInput({ apiKey, setApiKey, onLoad, loading, setL
 
   return (
     <div className="playlist-input">
-      <div className="input-row">
-        <input
-          type={showKey ? 'text' : 'password'}
-          placeholder="YouTube Data API 키"
-          value={apiKey}
-          onChange={e => handleApiKeyChange(e.target.value)}
-          className="input api-key-input"
-        />
-        <button className="btn-icon" onClick={() => setShowKey(s => !s)} title={showKey ? '숨기기' : '보기'}>
-          {showKey ? '🙈' : '👁'}
-        </button>
-      </div>
+      {!hasEnvApiKey && (
+        <div className="input-row">
+          <input
+            type={showKey ? 'text' : 'password'}
+            placeholder="YouTube Data API 키"
+            value={apiKey}
+            onChange={e => handleApiKeyChange(e.target.value)}
+            className="input api-key-input"
+          />
+          <button className="btn-icon" onClick={() => setShowKey(s => !s)} title={showKey ? '숨기기' : '보기'}>
+            {showKey ? '🙈' : '👁'}
+          </button>
+        </div>
+      )}
       <div className="input-row">
         <input
           type="text"
@@ -86,9 +88,11 @@ export default function PlaylistInput({ apiKey, setApiKey, onLoad, loading, setL
           ))}
         </ul>
       )}
-      <p className="hint">
-        API 키: <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noreferrer">Google Cloud Console</a>에서 발급
-      </p>
+      {!hasEnvApiKey && (
+        <p className="hint">
+          API 키: <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noreferrer">Google Cloud Console</a>에서 발급
+        </p>
+      )}
     </div>
   )
 }
